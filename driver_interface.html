@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Driver Interface</title>
+  <link rel="stylesheet" href="styles/style.css"> <!-- Link to your existing CSS file -->
+  <!-- Google Maps API -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDsbifug6g9OqlmZE9z-fuNKTBGy4VOHFM&libraries=places,directions,geometry&callback=initMap" async defer></script>
+  <style>
+    /* Reset margin and padding for body and html */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      overflow-x: hidden; /* Prevent horizontal scroll */
+    }
+
+    /* Header Styles */
+    header {
+      background: #FA4032; /* Dark red for header */
+      color: #fff;
+      padding: 1rem 0;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px; /* Space between logo and text */
+    }
+
+    .logo-img {
+      width: 40px; /* Adjust logo size */
+      height: 40px; /* Adjust logo size */
+    }
+
+    .logo span {
+      font-size: 1.8rem; /* Adjust text size */
+      font-weight: bold;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      margin: 0;
+      padding: 0;
+    }
+
+    .nav-links li {
+      margin-left: 20px;
+    }
+
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 1.2rem; /* Increase nav button font size */
+      padding: 5px 10px; /* Add padding for better click area */
+      transition: color 0.3s ease, background-color 0.3s ease; /* Smooth transition */
+    }
+
+    .nav-links a:hover {
+      color: #FA812F; /* Orange text on hover */
+      background-color: rgba(255, 255, 255, 0.1); /* Add a subtle background on hover */
+      border-radius: 5px; /* Rounded corners */
+    }
+
+    /* Main Content Styles */
+    .main-content {
+      padding-top: 80px; /* Account for fixed header */
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Ride Request Section */
+    .ride-requests {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+    }
+
+    .ride-requests h2 {
+      color: #FA4032; /* Dark red for headings */
+      margin-bottom: 20px;
+    }
+
+    .ride-card {
+      background: #FEF3E2; /* Light orange background */
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .ride-card h3 {
+      color: #FA4032; /* Dark red for headings */
+      margin-bottom: 10px;
+    }
+
+    .ride-card p {
+      margin: 5px 0;
+    }
+
+    .ride-card button {
+      padding: 10px 20px;
+      background: #FA4032; /* Dark red for button */
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .ride-card button:hover {
+      background: #E83A2A; /* Darker red on hover */
+    }
+
+    /* Map Styles */
+    #map {
+      height: 400px; /* Adjust map height */
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border: 3px solid #FA4032; /* Dark red border */
+    }
+
+    /* Ride Request Table Styles */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #FA4032; /* Dark red for table headers */
+      color: #fff;
+    }
+
+    tr:hover {
+      background-color: #FEF3E2; /* Light orange background on hover */
+    }
+
+    /* Selected User Details Styles */
+    .selected-user {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    .selected-user h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .selected-user p {
+      margin: 5px 0;
+      font-size: 16px;
+    }
+
+    /* Button Styles */
+    button {
+      padding: 10px 20px;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+
+    #accept-ride {
+      background-color: #4CAF50; /* Green for accept button */
+    }
+
+    #reject-ride {
+      background-color: #f44336; /* Red for reject button */
+      margin-left: 10px;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header Section -->
+  <header>
+    <nav>
+      <div class="logo">
+        <img src="assets/images/nammayatri_logo.jpg" alt="oNe-O-oNe Logo" class="logo-img">
+        <span>NammaYatri</span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="home.html">Home</a></li>
+        <li><a href="live_traffic_data.html">Live Traffic</a></li>
+        <li><a href="highdemand.html">Demand Prediction</a></li>
+        <li><a href="driver_dashboard.html">Dashboard</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <br/>
+    <br/>
+    <br/>
+    <h1>Welcome, Driver!</h1>
+
+    <!-- Ride Request Section -->
+    <div class="ride-requests">
+      <h2>Available Ride Requests</h2>
+      <div id="map"></div>
+      <table id="users-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Distance (km)</th>
+            <th>Source</th>
+            <th>Destination</th>
+          </tr>
+        </thead>
+        <tbody id="users-list"></tbody>
+      </table>
+      <div id="selected-user-details" class="selected-user">
+        <!-- Selected user details will be displayed here -->
+      </div>
+      <button id="accept-ride" disabled>Accept Ride</button>
+      <button id="reject-ride" disabled>Reject Ride</button>
+    </div>
+  </div>
+
+  <!-- JavaScript for Ride Requests -->
+  <script>
+    let map;
+    let driverMarker;
+    let userMarkers = [];
+    let circle;
+    let top5Users = []; // Store the top 5 nearby users
+    let selectedUser = null; // Store the selected user for ride acceptance
+    let currentRadius = 100; // Start with 100 meters
+    const maxRadius = 5000; // Max radius 5 km
+    const radiusIncrement = 100; // Increase radius by 100 meters
+    let isRideAccepted = false; // Flag to track if a ride is accepted
+
+    function initMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 14,
+            center: { lat: 12.9716, lng: 77.5946 },  // Default center for the map
+        });
+
+        // Get the driver's current location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const driverLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    };
+
+                    // Set the driver's location on the map
+                    setDriverLocation(driverLocation);
+
+                    // Simulate 30 random user locations within 5 km
+                    simulateUserLocations(driverLocation);
+
+                    // Start searching for top 5 nearby users
+                    searchTop5NearbyUsers(driverLocation);
+                },
+                (error) => {
+                    console.error("Error getting driver location:", error);
+                    alert("Unable to fetch your location. Please allow location access.");
+                }
+            );
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    }
+
+    function setDriverLocation(location) {
+        if (driverMarker) {
+            driverMarker.setMap(null); // Remove previous marker if exists
+        }
+
+        // Create a new marker for the driver's location
+        driverMarker = new google.maps.Marker({
+            position: location,
+            map: map,
+            icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
+            title: "You are here!",
+        });
+
+        map.setCenter(location);
+    }
+
+    function simulateUserLocations(driverLocation) {
+        for (let i = 0; i < 30; i++) {
+            let randomUser = {
+                lat: driverLocation.lat + (Math.random() - 0.5) * 0.09, // 5 km range (0.09° ≈ 5 km)
+                lng: driverLocation.lng + (Math.random() - 0.5) * 0.09,
+            };
+
+            let distance = google.maps.geometry.spherical.computeDistanceBetween(
+                new google.maps.LatLng(driverLocation),
+                new google.maps.LatLng(randomUser)
+            );
+
+            if (distance <= 5000) { // Only consider users within 5 km
+                let userNumber = i + 1; // Assign a unique user number
+                let source = `Location ${userNumber}`;
+                let destination = `Destination ${userNumber}`;
+
+                let marker = new google.maps.Marker({
+                    position: randomUser,
+                    map: map,
+                    icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+                    title: `User ${userNumber}`,
+                });
+
+                userMarkers.push({ marker, distance, userNumber, source, destination });
+            }
+        }
+    }
+
+    function searchTop5NearbyUsers(driverLocation) {
+        let insideCircle = [];
+
+        // Iterate over circles with increasing radius
+        let interval = setInterval(() => {
+            if (isRideAccepted) {
+                clearInterval(interval); // Stop searching if a ride is accepted
+                return;
+            }
+
+            // Create circle
+            circle = new google.maps.Circle({
+                map: map,
+                center: driverLocation,
+                radius: currentRadius,
+                strokeColor: "#FF0000",
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: "#FF0000",
+                fillOpacity: 0.2,
+            });
+
+            // Check for users inside the current circle
+            userMarkers.forEach(user => {
+                let distance = google.maps.geometry.spherical.computeDistanceBetween(
+                    new google.maps.LatLng(driverLocation),
+                    new google.maps.LatLng(user.marker.getPosition())
+                );
+
+                if (distance <= currentRadius) {
+                    // Check if the user is already in the insideCircle array
+                    const isUserAlreadyAdded = insideCircle.some(
+                        (u) => u.userNumber === user.userNumber
+                    );
+
+                    if (!isUserAlreadyAdded) {
+                        insideCircle.push(user);
+                    }
+                }
+            });
+
+            // If at least 5 users are found, stop increasing the radius
+            if (insideCircle.length >= 5) {
+                clearInterval(interval);
+
+                // Store the top 5 nearby users
+                top5Users = insideCircle
+                    .sort((a, b) => a.distance - b.distance) // Sort by distance
+                    .slice(0, 5); // Take the top 5
+
+                // Display the top 5 users in the table
+                displayTop5Users(top5Users);
+
+                // Select the next user for ride request
+                selectNextUser();
+            }
+
+            // Stop after max radius is reached
+            if (currentRadius >= maxRadius) {
+                clearInterval(interval);
+                if (insideCircle.length < 5) {
+                    document.getElementById("users-list").innerHTML = "<tr><td colspan='4'>Not enough users found within 5 km.</td></tr>";
+                }
+            }
+
+            currentRadius += radiusIncrement; // Increase radius
+        }, 1000); // Run every 1 second for a smooth transition
+    }
+
+    function displayTop5Users(users) {
+        const listContainer = document.getElementById("users-list");
+        listContainer.innerHTML = "";
+
+        users.forEach((user, index) => {
+            let userNumber = `User ${user.userNumber}`;
+            let distance = (user.distance / 1000).toFixed(2);
+            let source = user.source;
+            let destination = user.destination;
+
+            // Create a new row for the table
+            let row = document.createElement("tr");
+
+            // Add user number
+            let userCell = document.createElement("td");
+            userCell.textContent = userNumber;
+            row.appendChild(userCell);
+
+            // Add distance
+            let distanceCell = document.createElement("td");
+            distanceCell.textContent = distance;
+            row.appendChild(distanceCell);
+
+            // Add source
+            let sourceCell = document.createElement("td");
+            sourceCell.textContent = source;
+            row.appendChild(sourceCell);
+
+            // Add destination
+            let destinationCell = document.createElement("td");
+            destinationCell.textContent = destination;
+            row.appendChild(destinationCell);
+
+            // Append the row to the table
+            listContainer.appendChild(row);
+        });
+    }
+
+    function selectNextUser() {
+        if (isRideAccepted) return; // Stop if a ride is already accepted
+
+        if (top5Users.length > 0) {
+            // Select the next user from the top 5
+            selectedUser = top5Users.shift(); // Remove the first user from the list
+
+            // Display the selected user's details
+            displaySelectedUserDetails(selectedUser);
+
+            // Notify the driver about the ride request
+            alert(`You have a ride request from User ${selectedUser.userNumber} (${(selectedUser.distance / 1000).toFixed(2)} km away).`);
+
+            // Enable the "Accept Ride" and "Reject Ride" buttons
+            document.getElementById('accept-ride').disabled = false;
+            document.getElementById('reject-ride').disabled = false;
+        } else {
+            // If no more users are available, continue searching
+            alert("No more users available. Searching for new users...");
+            currentRadius = 100; // Reset radius
+            searchTop5NearbyUsers(driverMarker.getPosition());
+        }
+    }
+
+    function displaySelectedUserDetails(user) {
+        const selectedUserDiv = document.getElementById("selected-user-details");
+        selectedUserDiv.innerHTML = `
+            <h3>🚕 Selected User Details</h3>
+            <p>📍 <strong>Source:</strong> ${user.source}</p>
+            <p>🏁 <strong>Destination:</strong> ${user.destination}</p>
+            <p>📏 <strong>Distance:</strong> ${(user.distance / 1000).toFixed(2)} km</p>
+        `;
+    }
+// Handle ride acceptance
+document.getElementById('accept-ride').addEventListener('click', function() {
+if (selectedUser) {
+    isRideAccepted = true; // Set the flag to stop further searches
+    alert(`Ride confirmed! Proceed to User ${selectedUser.userNumber}'s location.\nSource: ${selectedUser.source}\nDestination: ${selectedUser.destination}`);
+
+    // Disable buttons after accepting the ride
+    document.getElementById('accept-ride').disabled = true;
+    document.getElementById('reject-ride').disabled = true;
+
+    // Redirect to ride-confirmation.html
+    window.location.href = "ride-confirmation.html";
+} else {
+    alert("No ride request available.");
+}
+});
+
+
+    // Handle ride rejection
+    document.getElementById('reject-ride').addEventListener('click', function() {
+        if (selectedUser) {
+            alert(`Ride rejected for User ${selectedUser.userNumber}. Searching for the next user...`);
+            // Reset for the next ride request
+            document.getElementById('accept-ride').disabled = true;
+            document.getElementById('reject-ride').disabled = true;
+            selectNextUser();
+        } else {
+            alert("No ride request available.");
+        }
+    });
+
+    window.initMap = initMap;
+</script>
+</body>
+</html>

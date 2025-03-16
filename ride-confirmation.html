@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ride Confirmation</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            background-color: #4CAF50; /* Green background */
+            color: white;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        .details {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            color: #333;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .details p {
+            font-size: 1.2rem;
+            margin: 10px 0;
+        }
+        .emoji {
+            font-size: 4rem;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #ffffff;
+            color: rgb(46, 213, 37);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="emoji">🚕</div>
+    <h1>Ride in Progress!</h1>
+    <div class="details">
+        <p><strong>User:</strong> <span id="user-number"></span></p>
+        <p><strong>Source:</strong> <span id="source"></span></p>
+        <p><strong>Destination:</strong> <span id="destination"></span></p>
+        <p><strong>Distance:</strong> <span id="distance"></span> km</p>
+        <p><strong>Base Fare:</strong> <span id="base-fare"></span></p>
+        <p><strong>Average Time:</strong> <span id="average-time"></span> minutes</p>
+        <p><strong>Total Trip Time:</strong> <span id="total-trip-time"></span> minutes</p>
+        <p><strong>Total Fare:</strong> <span id="total-fare"></span></p>
+    </div>
+    <button id="complete-fare">Complete Ride</button>
+
+    <script>
+        // List of area names
+        const areaNames = [
+            "Amruthahalli", "Anjanapura", "Anekal", "Banashankari", "Banashankari 6th Stage",
+            "Bannerghatta Road", "Basavanagudi", "Begur", "Bellandur", "Benniganahalli",
+            "Bommanahalli", "Bommasandra Industrial Area", "Brigade Road", "Brookefield",
+            "BTM Layout", "Byatarayanapura", "CV Raman Nagar", "Church Street", "Commercial Street",
+            "Cunningham Road", "Dasarahalli", "Devanahalli", "Doddabommasandra", "Domlur",
+            "Electronic City", "Fraser Town", "Gokula", "HAL Airport Area", "Hebbal", "Hoodi",
+            "Hongasandra", "Hoskote", "HSR Layout", "Hulimavu", "Indiranagar", "ITPL (Whitefield)",
+            "Jakkur", "Jalahalli Cross", "Jayanagar", "Jigani", "JP Nagar", "Kaggadasapura",
+            "Kadugodi", "Kengeri", "Kengeri Satellite Town", "Kodigehalli", "Koramangala",
+            "KR Puram", "Krishnaraja Puram", "Kumaraswamy Layout", "Kumbalgodu", "Kundalahalli",
+            "Lavelle Road", "Mahadevpura", "Malleshpalya", "Malleshwaram", "Manyata Tech Park (Nagavara)",
+            "Marathahalli", "Mathikere", "MG Road", "Nagarbhavi", "Nagasandra", "Nandini Layout",
+            "Nayandahalli", "Nelamangala", "Old Airport Road", "Outer Ring Road (ORR)", "Peenya",
+            "Peenya Industrial Area", "Rajajinagar", "Rajarajeshwari Arch", "Rajarajeshwari Nagar",
+            "Rajiv Nagar", "Ramamurthy Nagar", "Residency Road", "Richmond Town", "RT Nagar",
+            "Sadashivanagar", "Sahakara Nagar", "Sanjaynagar", "Sarjapur", "Shivajinagar",
+            "Thanisandra", "Tumkur Road", "Udayagiri", "Ullal", "Ulsoor", "Uttarahalli", "Varthur",
+            "Vidyaranyapura", "Vijayanagar", "Vishweshwaraiah Layout", "Whitefield", "Yelahanka",
+            "Yelahanka New Town", "Yeshwanthpur"
+        ];
+
+        // Function to get a random area name
+        function getRandomArea() {
+            return areaNames[Math.floor(Math.random() * areaNames.length)];
+        }
+
+        // Function to generate a random distance between 1 and 50 km
+        function getRandomDistance() {
+            return (Math.random() * 50).toFixed(2); // Random distance between 1 and 50 km
+        }
+
+        // Function to generate a random base fare between 50 and 200 INR
+        function getRandomBaseFare() {
+            return Math.floor(Math.random() * (200 - 50 + 1)) + 50; // Random base fare between 50 and 200 INR
+        }
+
+        // Function to generate a random average time between 15 and 60 minutes
+        function getRandomAverageTime() {
+            return Math.floor(Math.random() * (60 - 15 + 1)) + 15; // Random average time between 15 and 60 minutes
+        }
+
+        // Function to generate a random total trip time near the average time (+/- 10-20 minutes)
+        function getRandomTotalTripTime(averageTime) {
+            const deviation = Math.floor(Math.random() * (20 - 10 + 1)) + 10; // Random deviation between 10 and 20 minutes
+            const isPositive = Math.random() < 0.5; // Randomly decide if deviation is positive or negative
+            return isPositive ? averageTime + deviation : averageTime - deviation;
+        }
+
+        // Retrieve ride details from URL parameters or generate random values
+        const urlParams = new URLSearchParams(window.location.search);
+        const userNumber = urlParams.get('userNumber') || `User ${Math.floor(Math.random() * 100)}`; // Random user number
+        const source = urlParams.get('source') || getRandomArea(); // Random source
+        const destination = urlParams.get('destination') || getRandomArea(); // Random destination
+        const distance = parseFloat(urlParams.get('distance')) || parseFloat(getRandomDistance()); // Random distance
+        const baseFare = parseFloat(urlParams.get('baseFare')) || getRandomBaseFare(); // Random base fare
+        const averageTime = parseFloat(urlParams.get('averageTime')) || getRandomAverageTime(); // Random average time
+        const totalTripTime = parseFloat(urlParams.get('totalTripTime')) || getRandomTotalTripTime(averageTime); // Random total trip time
+
+        // Display ride details
+        document.getElementById('user-number').textContent = userNumber;
+        document.getElementById('source').textContent = source;
+        document.getElementById('destination').textContent = destination;
+        document.getElementById('distance').textContent = distance.toFixed(2);
+        document.getElementById('base-fare').textContent = `₹${baseFare.toFixed(2)}`;
+        document.getElementById('average-time').textContent = averageTime;
+        document.getElementById('total-trip-time').textContent = totalTripTime;
+
+        // Function to calculate total fare
+        function calculateTotalFare(baseFare, averageTime, totalTripTime) {
+            if (totalTripTime > averageTime) {
+                const extraTime = totalTripTime - averageTime; // Extra time taken
+                const extraFare = extraTime * (0.05 * baseFare); // 05% of base fare per extra minute
+                return baseFare + extraFare; // Total fare
+            } else {
+                return baseFare; // No extra fare if total trip time is less than or equal to average time
+            }
+        }
+
+        // Handle "Complete Fare" button click
+        document.getElementById('complete-fare').addEventListener('click', function() {
+            const totalFare = calculateTotalFare(baseFare, averageTime, totalTripTime); // Calculate total fare
+            document.getElementById('total-fare').textContent = `₹${totalFare.toFixed(2)}`; // Display total fare
+            alert(`Total Fare calculated: ₹${totalFare.toFixed(2)}`); // Show total fare in alert
+            window.location.href = 'driver_dashboard.html';
+            this.disabled = true; // Disable the button after fare is calculated
+        });
+    </script>
+</body>
+</html>

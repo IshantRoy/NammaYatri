@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Registration - NammaYatri</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #6a11cb, #2575fc); /* Gradient background */
+            color: #333;
+        }
+
+        .container {
+            max-width: 400px;
+            width: 100%;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.9); /* Semi-transparent white background */
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            text-align: left;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus {
+            border-color: #6a11cb;
+            box-shadow: 0 0 8px rgba(106, 17, 203, 0.3);
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #6a11cb, #2575fc); /* Gradient button */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #2575fc, #6a11cb); /* Reverse gradient on hover */
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .error {
+            color: #ff4d4d;
+            margin-bottom: 20px;
+            font-size: 14px;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            25% {
+                transform: translateX(-10px);
+            }
+            50% {
+                transform: translateX(10px);
+            }
+            75% {
+                transform: translateX(-10px);
+            }
+        }
+
+        /* Link to Home Page */
+        .home-link {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #6a11cb;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .home-link:hover {
+            color: #2575fc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Driver Registration</h2>
+        <form id="register-form">
+            <label for="username">Username:</label>
+            <input type="text" id="username" placeholder="Enter your username" required>
+
+            <label for="password">Password:</label>
+            <input type="password" id="password" placeholder="Enter your password" required>
+
+            <button type="submit">Register</button>
+        </form>
+        <p id="error-message" class="error"></p>
+        <a href="index.html" class="home-link">Back to Home</a>
+    </div>
+
+    <script>
+        // Generate random driver data (20 drivers)
+        const drivers = [];
+        for (let i = 1; i <= 20; i++) {
+            drivers.push({
+                username: `driver${i}`, // Fixed: Added backticks for template literals
+                password: `password${i}` // Fixed: Added backticks for template literals
+            });
+        }
+
+        // Track failed login attempts
+        let failedAttempts = 0;
+
+        // Handle form submission
+        document.getElementById('register-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent form submission
+
+            // Clear previous error message
+            document.getElementById('error-message').textContent = '';
+
+            // Get username and password
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // Check if the username and password match any driver
+            const driver = drivers.find(d => d.username === username && d.password === password);
+
+            if (driver) {
+                // Redirect to the next page (e.g., driver dashboard)
+                window.location.href = 'driver_dashboard.html';
+            } else {
+                // Increment failed attempts
+                failedAttempts++;
+
+                // Display error message
+                document.getElementById('error-message').textContent = `Invalid credentials. Attempts left: ${3 - failedAttempts}`;
+
+                // Redirect to home page after 3 failed attempts
+                if (failedAttempts >= 3) {
+                    alert('Too many failed attempts. Redirecting to home page...');
+                    window.location.href = 'index.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

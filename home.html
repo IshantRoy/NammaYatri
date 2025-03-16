@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NammaYatri</title>
+  <link rel="stylesheet" href="styles/style.css">
+  <style>
+    /* General Styles */
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    h1, h2, h3 {
+      color: #c8b8d8;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* Header Section */
+    header {
+      background: #6a11cb;
+      color: #fff;
+      padding: 1rem 0;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-img {
+      width: 40px;
+      height: 40px;
+    }
+
+    .logo span {
+      font-size: 1.8rem;
+      font-weight: bold;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      margin: 0;
+      padding: 0;
+    }
+
+    .nav-links li {
+      margin-left: 20px;
+    }
+
+    .nav-links a {
+      color: #fff;
+      font-size: 1.2rem;
+      padding: 5px 10px;
+      transition: color 0.3s ease, background-color 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      color: #6a11cb;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 5px;
+    }
+
+    .menu-toggle {
+      display: none;
+      flex-direction: column;
+      cursor: pointer;
+    }
+
+    .menu-toggle .bar {
+      height: 3px;
+      width: 25px;
+      background: #fff;
+      margin: 4px 0;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 100px 20px;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #fff;
+      text-align: center;
+    }
+
+    .hero-content h1 {
+      font-size: 3rem;
+      margin-bottom: 20px;
+    }
+
+    .hero-content p {
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .button-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon {
+      width: 60px;
+      height: 60px;
+    }
+
+    .hero-buttons button {
+      padding: 10px 20px;
+      background: #fff;
+      color: #6a11cb;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .hero-buttons button:hover {
+      background: #f0f0f0;
+    }
+
+    /* Features Section */
+    .features {
+      padding: 60px 20px;
+      background: #fff;
+      text-align: center;
+    }
+
+    .features h2 {
+      font-size: 2.5rem;
+      margin-bottom: 40px;
+    }
+
+    .feature-cards {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .card {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 300px;
+      text-align: left;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .card h3 {
+      font-size: 1.5rem;
+      color: #6a11cb;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      font-size: 1rem;
+      color: #555;
+    }
+
+    /* About Section */
+    .about {
+      padding: 60px 20px;
+      background: #f9f9f9;
+      text-align: center;
+    }
+
+    .about h2 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+
+    .about p {
+      font-size: 1.2rem;
+      color: #555;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* Contact Section */
+    .contact {
+      padding: 60px 20px;
+      background: #fff;
+      text-align: center;
+    }
+
+    .contact h2 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+
+    .contact form {
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .contact input, .contact textarea {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    .contact textarea {
+      resize: vertical;
+      height: 150px;
+    }
+
+    .contact button {
+      padding: 10px 20px;
+      background: #6a11cb;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .contact button:hover {
+      background: #2575fc;
+    }
+
+    /* Footer */
+    footer {
+      padding: 20px;
+      background: #6a11cb;
+      color: #fff;
+      text-align: center;
+    }
+
+    footer p {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .nav-links.active {
+        display: flex;
+      }
+
+      .menu-toggle {
+        display: flex;
+      }
+
+      .hero-content h1 {
+        font-size: 2rem;
+      }
+
+      .hero-content p {
+        font-size: 1.2rem;
+      }
+
+      .hero-buttons {
+        flex-direction: column;
+      }
+
+      .card {
+        width: 100%;
+      max-width: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header Section -->
+  <header>
+    <nav>
+      <div class="logo">
+        <img src="assets/images/nammayatri_logo.jpg" alt="NammaYatri Logo" class="logo-img">
+        <span>NammaYatri</span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#home">Home</a></li>
+        <li><a href="live_traffic_data.html">Live Traffic</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <div class="menu-toggle" id="mobile-menu">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section id="home" class="hero">
+    <div class="hero-content">
+      <h1>Welcome to NammaYatri</h1>
+      <p>Your one-stop solution for seamless cab booking experiences.</p>
+      <div class="hero-buttons">
+        <div class="button-container">
+          <img src="assets/images/human.png" alt="Rider Icon" class="icon">
+          <a href="user.html"><button id="rider-button">I'm a User</button></a>
+        </div>
+        <div class="button-container">
+          <img src="assets/images/driver_4900915.png" alt="Driver Icon" class="icon">
+          <a href="register.html"><button id="driver-button">I'm a Driver</button></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="features">
+    <h2>🌟 Features</h2>
+    <div class="feature-cards">
+      <!-- Feature Cards (12 features) -->
+      <!-- Feature 1 -->
+      <div class="card">
+        <h3>🤖 AI-Driven Demand Prediction & Driver Allocation</h3>
+        <p>Forecast hotspots using advanced LSTM models for efficient driver allocation.</p>
+      </div>
+      <!-- Feature 2 -->
+      <div class="card">
+        <h3>💸 Dynamic & Transparent Pricing</h3>
+        <p>Fare = Base + Traffic + Demand Multiplier (visible to drivers and riders).</p>
+      </div>
+      <!-- Feature 3 -->
+      <div class="card">
+        <h3>🎮 Gamification & Incentives</h3>
+        <p>Reward badges (e.g., "Peak Hour Hero") and cash bonuses for high acceptance rates.</p>
+      </div>
+      <!-- Feature 4 -->
+      <div class="card">
+        <h3>📢 Behavioral Nudges</h3>
+        <p>Push notifications like, "Earn ₹100 extra in the next hour by relocating to MG Road!"</p>
+      </div>
+      <!-- Feature 5 -->
+      <div class="card">
+        <h3>📍 Optimized Matching</h3>
+        <p>A* algorithm for pairing riders with the nearest driver (≤2km).</p>
+      </div>
+      <!-- Feature 6 -->
+      <div class="card">
+        <h3>🚕 Passenger Real-Time Updates</h3>
+        <p>Live ETA, driver route tracking, and fare adjustments for riders.</p>
+      </div>
+      <!-- Feature 7 -->
+      <div class="card">
+        <h3>🛠️ Driver Support</h3>
+        <p>Multilingual chatbot (supports Kannada, Hindi, English) for dispute resolution.</p>
+      </div>
+      <!-- Feature 8 -->
+      <div class="card">
+        <h3>🚦 Traffic-Aware Routing</h3>
+        <p>Integrates Google Maps + TomTom traffic data for low-congestion paths.</p>
+      </div>
+      <!-- Feature 9 -->
+      <div class="card">
+        <h3>⚖️ Surge Balancing</h3>
+        <p>"Fair Earnings" mode ensures drivers earn ≥₹500/hour during surges.</p>
+      </div>
+      <!-- Feature 10 -->
+      <div class="card">
+        <h3>📈 Scalable Architecture</h3>
+        <p>Kubernetes clusters handle 10,000+ concurrent bookings seamlessly.</p>
+      </div>
+      <!-- Feature 11 -->
+      <div class="card">
+        <h3>🔍 Transparency Features</h3>
+        <p>Open API for fare audits, driver ratings visible to riders.</p>
+      </div>
+      <!-- Feature 12 -->
+      <div class="card">
+        <h3>📊 Continuous Monitoring</h3>
+        <p>ELK Stack tracks ride denials to refine AI models weekly.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="about">
+    <h2>About Us</h2>
+    <p>
+      At NammaYatri, we are a team of passionate developers and innovators dedicated to revolutionizing the ride-hailing industry. 
+      Our mission is to provide seamless, transparent, and efficient cab booking experiences for both riders and drivers. 
+      With cutting-edge technology like AI-driven demand prediction, dynamic pricing, and gamification, we aim to make every ride a delightful experience.
+    </p>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="contact">
+    <h2>Contact Us</h2>
+    <form id="contact-form">
+      <input type="text" id="name" placeholder="Your Name" required>
+      <input type="email" id="email" placeholder="Your Email" required>
+      <textarea id="message" placeholder="Your Message" required></textarea>
+      <button type="submit">Send Message</button>
+    </form>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2023 NammaYatri. All rights reserved.</p>
+  </footer>
+
+  <script src="scripts/script.js"></script>
+</body>
+</html>

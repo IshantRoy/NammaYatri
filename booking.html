@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a Ride</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .loading {
+            font-style: italic;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Book a Ride</h2>
+        <form id="ride-form">
+            <label for="from-address">From Address:</label>
+            <input type="text" id="from-address" placeholder="Fetching your location..." readonly class="loading">
+            
+            <label for="to-address">To Address:</label>
+            <input type="text" id="to-address" list="areas" placeholder="Enter your destination" required>
+
+            <!-- Datalist for predefined areas -->
+            <datalist id="areas">
+                <option value="Amruthahalli">
+                <option value="Anjanapura">
+                <option value="Anekal">
+                <option value="Banashankari">
+                <option value="Banashankari 6th Stage">
+                <option value="Bannerghatta Road">
+                <option value="Basavanagudi">
+                <option value="Begur">
+                <option value="Bellandur">
+                <option value="Benniganahalli">
+                <option value="Bommanahalli">
+                <option value="Bommasandra Industrial Area">
+                <option value="Brigade Road">
+                <option value="Brookefield">
+                <option value="BTM Layout">
+                <option value="Byatarayanapura">
+                <option value="CV Raman Nagar">
+                <option value="Church Street">
+                <option value="Commercial Street">
+                <option value="Cunningham Road">
+                <option value="Dasarahalli">
+                <option value="Devanahalli">
+                <option value="Doddabommasandra">
+                <option value="Domlur">
+                <option value="Electronic City">
+                <option value="Fraser Town">
+                <option value="Gokula">
+                <option value="HAL Airport Area">
+                <option value="Hebbal">
+                <option value="Hoodi">
+                <option value="Hongasandra">
+                <option value="Hoskote">
+                <option value="HSR Layout">
+                <option value="Hulimavu">
+                <option value="Indiranagar">
+                <option value="ITPL (Whitefield)">
+                <option value="Jakkur">
+                <option value="Jalahalli Cross">
+                <option value="Jayanagar">
+                <option value="Jigani">
+                <option value="JP Nagar">
+                <option value="Kaggadasapura">
+                <option value="Kadugodi">
+                <option value="Kengeri">
+                <option value="Kengeri Satellite Town">
+                <option value="Kodigehalli">
+                <option value="Koramangala">
+                <option value="KR Puram">
+                <option value="Krishnaraja Puram">
+                <option value="Kumaraswamy Layout">
+                <option value="Kumbalgodu">
+                <option value="Kundalahalli">
+                <option value="Lavelle Road">
+                <option value="Mahadevpura">
+                <option value="Malleshpalya">
+                <option value="Malleshwaram">
+                <option value="Manyata Tech Park (Nagavara)">
+                <option value="Marathahalli">
+                <option value="Mathikere">
+                <option value="MG Road">
+                <option value="Nagarbhavi">
+                <option value="Nagasandra">
+                <option value="Nandini Layout">
+                <option value="Nayandahalli">
+                <option value="Nelamangala">
+                <option value="Old Airport Road">
+                <option value="Outer Ring Road (ORR)">
+                <option value="Peenya">
+                <option value="Peenya Industrial Area">
+                <option value="Rajajinagar">
+                <option value="Rajarajeshwari Arch">
+                <option value="Rajarajeshwari Nagar">
+                <option value="Rajiv Nagar">
+                <option value="Ramamurthy Nagar">
+                <option value="Residency Road">
+                <option value="Richmond Town">
+                <option value="RT Nagar">
+                <option value="Sadashivanagar">
+                <option value="Sahakara Nagar">
+                <option value="Sanjaynagar">
+                <option value="Sarjapur">
+                <option value="Shivajinagar">
+                <option value="Thanisandra">
+                <option value="Tumkur Road">
+                <option value="Udayagiri">
+                <option value="Ullal">
+                <option value="Ulsoor">
+                <option value="Uttarahalli">
+                <option value="Varthur">
+                <option value="Vidyaranyapura">
+                <option value="Vijayanagar">
+                <option value="Vishweshwaraiah Layout">
+                <option value="Whitefield">
+                <option value="Yelahanka">
+                <option value="Yelahanka New Town">
+                <option value="Yeshwanthpur">
+            </datalist>
+
+            <button type="submit">Book Ride</button>
+        </form>
+    </div>
+
+    <script>
+        // Function to fetch the user's current location and reverse-geocode it
+        function fetchCurrentLocation() {
+            const fromAddressInput = document.getElementById('from-address');
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                        };
+
+                        // Reverse geocode to get the address
+                        reverseGeocode(userLocation, fromAddressInput);
+                    },
+                    (error) => {
+                        console.error("Error getting user location:", error);
+                        fromAddressInput.placeholder = "Unable to fetch your location.";
+                        fromAddressInput.classList.remove('loading');
+                    }
+                );
+            } else {
+                fromAddressInput.placeholder = "Geolocation is not supported by this browser.";
+                fromAddressInput.classList.remove('loading');
+            }
+        }
+
+        // Function to reverse-geocode coordinates into an address
+        function reverseGeocode(location, inputElement) {
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ location: location }, (results, status) => {
+                if (status === "OK") {
+                    if (results[0]) {
+                        // Set the "From" address
+                        inputElement.value = results[0].formatted_address;
+                        inputElement.classList.remove('loading');
+                    } else {
+                        inputElement.placeholder = "No address found for this location.";
+                        inputElement.classList.remove('loading');
+                    }
+                } else {
+                    inputElement.placeholder = "Geocoder failed due to: " + status;
+                    inputElement.classList.remove('loading');
+                }
+            });
+        }
+
+        // Fetch the current location when the page loads
+        fetchCurrentLocation();
+
+        // Handle form submission
+        document.getElementById('ride-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent form submission
+
+            // Get the "From" and "To" addresses
+            const fromAddress = document.getElementById('from-address').value;
+            const toAddress = document.getElementById('to-address').value;
+
+            // Store the addresses in localStorage
+            localStorage.setItem('fromAddress', fromAddress);
+            localStorage.setItem('toAddress', toAddress);
+
+            // Redirect to the second page
+            window.location.href = 'map.html';
+        });
+    </script>
+
+    <!-- Load Google Maps JavaScript API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDsbifug6g9OqlmZE9z-fuNKTBGy4VOHFM&libraries=places&callback=fetchCurrentLocation" async defer></script>
+</body>
+</html>

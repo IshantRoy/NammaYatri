@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>High Demand Areas on Map</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDsbifug6g9OqlmZE9z-fuNKTBGy4VOHFM&callback=initMap" async defer></script>
+    <link rel="stylesheet" href="styles/style.css">
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: #FEF3E2; /* Light orange background */
+            color: #333; /* Dark text for contrast */
+        }
+
+        #map {
+            height: 500px;
+            width: 100%;
+            margin-bottom: 20px; /* Space between map and list */
+            border-radius: 10px; /* Rounded corners */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            border: 3px solid #FA4032; /* Dark red border */
+        }
+
+        #output {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #fff; /* White background */
+            border: 1px solid #FA4032; /* Dark red border */
+            border-radius: 10px; /* Rounded corners */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #FA4032; /* Dark red border */
+        }
+
+        th {
+            background-color: #FA4032; /* Dark red background */
+            color: #fff; /* White text */
+        }
+
+        tr:hover {
+            background-color: #FEF3E2; /* Light orange background on hover */
+        }
+
+        h1, h2 {
+            color: #FA4032; /* Dark red text */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+          <div class="logo">
+            <img src="assets/images/nammayatri_logo.jpg" alt="oNe-O-oNe Logo" class="logo-img">
+            <span>NammaYatri</span>
+          </div>
+          <ul class="nav-links">
+            <li><a href="driver_interface.html">Ride Requests</a></li>
+          </ul>
+        </nav>
+      </header>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+    <center><h1>High Demand Areas on Map</h1></center>
+    <div id="map"></div> <!-- Map is above -->
+    <div id="output"></div> <!-- High-demand areas list is below -->
+
+    <script>
+        let map;
+        let userLocation = null;
+        let circle = null; // To hold the 5 km radius circle
+        let highDemandAreas = []; // To store high-demand areas
+
+        // Function to initialize the map
+        function initMap() {
+            // Default center (will be updated to user's location)
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 0, lng: 0 },
+                zoom: 12
+            });
+
+            // Fetch the user's current location
+            fetchUserLocation();
+        }
+
+        // Function to fetch the user's current location
+        function fetchUserLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        map.setCenter(userLocation); // Center map on user's location
+
+                        // Draw a 5 km radius circle around the user's location
+                        circle = new google.maps.Circle({
+                            strokeColor: "#FF0000",
+                            strokeOpacity: 0.8,
+                            strokeWeight: 2,
+                            fillColor: "#FF0000",
+                            fillOpacity: 0.2,
+                            map: map,
+                            center: userLocation,
+                            radius: 5000 // 5 km in meters
+                        });
+
+                        // Add a blue location pin for the user's location
+                        new google.maps.Marker({
+                            position: userLocation,
+                            map: map,
+                            icon: {
+                                url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png", // Blue pin
+                                scaledSize: new google.maps.Size(40, 40) // Resize the icon
+                            },
+                            title: "Your Location"
+                        });
+
+                        processCSV(); // Process CSV data after location is fetched
+                    },
+                    (error) => {
+                        console.error('Error fetching location:', error);
+                        alert('Unable to fetch your location. Using default center.');
+                        processCSV(); // Process CSV data even if location fails
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by your browser. Using default center.');
+                processCSV(); // Process CSV data if geolocation is not supported
+            }
+        }
+
+        // Function to calculate distance between two coordinates (Haversine formula)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Radius of the Earth in km
+            const dLat = (lat2 - lat1) * (Math.PI / 180);
+            const dLon = (lon2 - lon1) * (Math.PI / 180);
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; // Distance in km
+        }
+
+        // Function to fetch and process CSV data
+        async function processCSV() {
+            try {
+                // Fetch the CSV file
+                const response = await fetch('demand_data.csv'); // Replace with your CSV file path
+                if (!response.ok) {
+                    throw new Error('Failed to fetch CSV file');
+                }
+                const csvText = await response.text();
+
+                // Parse the CSV file
+                const results = Papa.parse(csvText, {
+                    header: true,
+                    dynamicTyping: true,
+                    skipEmptyLines: true
+                });
+
+                // Log parsed data for debugging
+                console.log('Parsed CSV Data:', results.data);
+
+                // Get the current timestamp (hour)
+                const now = new Date();
+                const currentHour = now.getHours();
+                const nextHour = (currentHour + 1) % 24; // Handle 23:00 to 00:00
+                const currentTime = `${String(currentHour).padStart(2, '0')}:00 to ${String(nextHour).padStart(2, '0')}:00`;
+
+                // Get the timestamp for 1 hour later
+                const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+                const oneHourLaterHour = oneHourLater.getHours();
+                const oneHourLaterNextHour = (oneHourLaterHour + 1) % 24;
+                const oneHourLaterTime = `${String(oneHourLaterHour).padStart(2, '0')}:00 to ${String(oneHourLaterNextHour).padStart(2, '0')}:00`;
+
+                // Log current time and 1 hour later time for debugging
+                console.log('Current Time:', currentTime);
+                console.log('One Hour Later Time:', oneHourLaterTime);
+
+                // Filter data for the current hour and 1 hour later
+                const currentData = results.data.filter(entry => entry.Time === currentTime);
+                const oneHourLaterData = results.data.filter(entry => entry.Time === oneHourLaterTime);
+
+                // Log filtered data for debugging
+                console.log('Current Data:', currentData);
+                console.log('One Hour Later Data:', oneHourLaterData);
+
+                // Calculate total demand for each area in the current hour
+                const currentAreaDemand = {};
+                currentData.forEach(entry => {
+                    if (!currentAreaDemand[entry["Area Name"]]) {
+                        currentAreaDemand[entry["Area Name"]] = 0;
+                    }
+                    currentAreaDemand[entry["Area Name"]] += entry["Number Of Duties"];
+                });
+
+                // Calculate total demand for each area in 1 hour later
+                const oneHourLaterAreaDemand = {};
+                oneHourLaterData.forEach(entry => {
+                    if (!oneHourLaterAreaDemand[entry["Area Name"]]) {
+                        oneHourLaterAreaDemand[entry["Area Name"]] = 0;
+                    }
+                    oneHourLaterAreaDemand[entry["Area Name"]] += entry["Number Of Duties"];
+                });
+
+                // Log area demand for debugging
+                console.log('Current Area Demand:', currentAreaDemand);
+                console.log('One Hour Later Area Demand:', oneHourLaterAreaDemand);
+
+                // Sort all areas by demand (descending) for 1 hour later
+                const sortedAllAreas = Object.entries(oneHourLaterAreaDemand).sort((a, b) => b[1] - a[1]);
+
+                // Log sorted areas for debugging
+                console.log('Sorted All Areas:', sortedAllAreas);
+
+                // Get the top 5 high-demand areas
+                highDemandAreas = sortedAllAreas.slice(0, 5);
+
+                // Display the results
+                const outputDiv = document.getElementById('output');
+                outputDiv.innerHTML = ''; // Clear previous content
+
+                // Create a table to display all high-demand areas
+                let tableHTML = `
+                    <h2>All High Demand Areas (High to Low):</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Location</th>
+                                <th>Number of Duties</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                // Populate the table with area name and number of duties
+                sortedAllAreas.forEach((area) => {
+                    tableHTML += `
+                        <tr>
+                            <td>${area[0]}</td>
+                            <td>${area[1]}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+
+                outputDiv.innerHTML = tableHTML;
+
+                // Geocode all areas and add markers to the map
+                const geocoder = new google.maps.Geocoder();
+                const markers = []; // To hold all markers
+
+                // Add markers for top 5 high-demand areas (red pins)
+                highDemandAreas.forEach((area) => {
+                    const areaName = area[0];
+                    const areaLocation = results.data.find(entry => entry["Area Name"] === areaName);
+
+                    if (areaLocation) {
+                        geocoder.geocode({ address: areaName }, (results, status) => {
+                            if (status === 'OK' && results[0]) {
+                                const location = results[0].geometry.location;
+
+                                // Add red pin for top 5 high-demand areas
+                                new google.maps.Marker({
+                                    position: location,
+                                    map: map,
+                                    icon: {
+                                        url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png", // Red pin
+                                        scaledSize: new google.maps.Size(40, 40) // Resize the icon
+                                    },
+                                    title: areaName
+                                });
+                            } else {
+                                console.error('Geocode failed for:', areaName, 'Status:', status);
+                            }
+                        });
+                    }
+                });
+
+                // Add markers for areas within 5 km radius (yellow pins)
+                sortedAllAreas.forEach((area) => {
+                    const areaName = area[0];
+                    const areaLocation = results.data.find(entry => entry["Area Name"] === areaName);
+
+                    if (areaLocation) {
+                        geocoder.geocode({ address: areaName }, (results, status) => {
+                            if (status === 'OK' && results[0]) {
+                                const location = results[0].geometry.location;
+
+                                // Check if the area is within the 5 km radius
+                                const distance = calculateDistance(
+                                    userLocation.lat,
+                                    userLocation.lng,
+                                    location.lat(),
+                                    location.lng()
+                                );
+
+                                if (distance <= 5) {
+                                    // Add yellow pin for areas within 5 km radius
+                                    new google.maps.Marker({
+                                        position: location,
+                                        map: map,
+                                        icon: {
+                                            url: "https://maps.google.com/mapfiles/ms/icons/yellow-dot.png", // Yellow pin
+                                            scaledSize: new google.maps.Size(40, 40) // Resize the icon
+                                        },
+                                        title: areaName
+                                    });
+                                }
+                            } else {
+                                console.error('Geocode failed for:', areaName, 'Status:', status);
+                            }
+                        });
+                    }
+                });
+
+                // Start showing alert messages every 30 seconds
+                showAlertMessages();
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('output').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+
+        // Function to show alert messages every 30 seconds
+        function showAlertMessages() {
+            const messages = [
+                `If you complete 3 rides in ${highDemandAreas[0][0]}! You'll get more Rides.`,
+                `If you complete 3 rides in ${highDemandAreas[1][0]} for a 100.Rs bonus amount!`,
+                `Drive to ${highDemandAreas[2][0]} for higher earnings!`,
+                `Visit ${highDemandAreas[3][0]} to maximize your trips!`,
+                `Move to ${highDemandAreas[4][0]} for better opportunities!`
+            ];
+
+            setInterval(() => {
+                const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                alert(randomMessage);
+            }, 30000); // 30 seconds
+        }
+
+        // Refresh the entire page every 60 seconds
+        setInterval(() => {
+            location.reload();
+        }, 60000); // 60 seconds
+    </script>
+</body>
+</html>

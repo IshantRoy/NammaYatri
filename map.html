@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Nearby Drivers</title>
+
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDsbifug6g9OqlmZE9z-fuNKTBGy4VOHFM&libraries=places,directions,geometry&callback=initMap" async defer></script>
+
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #6a11cb, #2575fc); /* Gradient background */
+            color: #333;
+        }
+
+        h2 {
+            color: #fff;
+            text-align: center;
+            margin-top: 80px;
+            font-size: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9); /* Semi-transparent white background */
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .address-info {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            color: #555;
+        }
+
+        .address-info strong {
+            color: #6a11cb;
+        }
+
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #places-list {
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #6a11cb;
+            color: #fff;
+        }
+
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .button-container {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #6a11cb, #2575fc); /* Gradient button */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #2575fc, #6a11cb); /* Reverse gradient on hover */
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #cancel-ride {
+            background: linear-gradient(135deg, #f44336, #e53935); /* Red gradient for cancel button */
+        }
+
+        #confirm-ride {
+            background: linear-gradient(135deg, #4CAF50, #43A047); /* Green gradient for confirm button */
+        }
+
+        #best-driver {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: #6a11cb;
+            text-align: center;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            .button-container {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Find Nearby Drivers</h2>
+    <div class="address-info">
+        <p><strong>From:</strong> <span id="from-address-display">Fetching your location...</span></p>
+        <p><strong>To:</strong> <span id="to-address-display"></span></p>
+    </div>
+    <div id="map"></div>
+    <div id="places-list">
+        <h3>Nearby Drivers</h3>
+        <table id="drivers-table">
+            <thead>
+                <tr>
+                    <th>Driver Name</th>
+                    <th>Distance (km)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="drivers-list"></tbody>
+        </table>
+        <h3 id="best-driver"></h3> <!-- Best driver displayed here -->
+    </div>
+
+    <!-- Button Container -->
+    <div class="button-container">
+        <button id="cancel-ride">Cancel Ride</button>
+        <button id="request-new-driver">Request New Driver</button>
+        <button id="confirm-ride">Confirm Ride</button>
+    </div>
+
+    <script>
+        let map;
+        let userMarker;
+        let driverMarkers = [];
+        let circle;
+        let bestDriver = null;
+        let nearestDriverDistance = null;
+        let nearestDriverNumber = null; // Track the nearest driver's number
+        let top5Drivers = []; // Store the top 5 nearby drivers
+
+        // Retrieve "To" address from localStorage
+        const toAddress = localStorage.getItem('toAddress');
+        document.getElementById('to-address-display').textContent = toAddress;
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 14,
+                center: { lat: 12.9716, lng: 77.5946 },  // Default center for the map
+            });
+
+            // Get the user's current location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                        };
+
+                        // Set the user's location on the map
+                        setUserLocation(userLocation);
+
+                        // Reverse geocode to get the "From" address
+                        reverseGeocode(userLocation);
+                    },
+                    (error) => {
+                        console.error("Error getting user location:", error);
+                        alert("Unable to fetch your location. Please allow location access.");
+                    }
+                );
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        function setUserLocation(location) {
+            if (userMarker) {
+                userMarker.setMap(null); // Remove previous marker if exists
+            }
+
+            // Create a new marker for the user's location
+            userMarker = new google.maps.Marker({
+                position: location,
+                map: map,
+                icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+                title: "You are here!",
+            });
+
+            map.setCenter(location);
+            generateRandomDrivers(location);
+        }
+
+        function reverseGeocode(location) {
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ location: location }, (results, status) => {
+                if (status === "OK") {
+                    if (results[0]) {
+                        // Display the "From" address
+                        document.getElementById('from-address-display').textContent = results[0].formatted_address;
+                    } else {
+                        console.error("No results found");
+                    }
+                } else {
+                    console.error("Geocoder failed due to: " + status);
+                }
+            });
+        }
+
+        function generateRandomDrivers(userLocation) {
+            let insideCircle = [];
+            driverMarkers.forEach(marker => marker.setMap(null)); // Clear previous markers
+            driverMarkers = [];
+
+            // Generate 25 random drivers within a 5km radius (initial generation)
+            for (let i = 0; i < 25; i++) {
+                let randomDriver = {
+                    lat: userLocation.lat + (Math.random() - 0.5) * 0.09, // 5 km range (0.09° ≈ 5 km)
+                    lng: userLocation.lng + (Math.random() - 0.5) * 0.09,
+                };
+
+                let distance = google.maps.geometry.spherical.computeDistanceBetween(
+                    new google.maps.LatLng(userLocation),
+                    new google.maps.LatLng(randomDriver)
+                );
+
+                if (distance <= 5000) { // Only consider drivers within 5 km
+                    let driverNumber = insideCircle.length + 1; // Assign a unique driver number
+                    let marker = new google.maps.Marker({
+                        position: randomDriver,
+                        map: map,
+                        icon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+                        title: `Driver ${driverNumber}`,
+                    });
+
+                    insideCircle.push({ marker, distance, driverNumber });
+                    driverMarkers.push(marker);
+                }
+            }
+
+            if (insideCircle.length > 0) {
+                displayDrivers(userLocation, insideCircle);
+                searchDriversInCircle(userLocation, insideCircle);
+            }
+        }
+
+        function displayDrivers(userLocation, drivers) {
+            const listContainer = document.getElementById("drivers-list");
+            listContainer.innerHTML = "";
+
+            drivers.forEach((driver, index) => {
+                let driverName = `Driver ${driver.driverNumber}`;
+                let distance = (driver.distance / 1000).toFixed(2);
+                let status = "Available"; // Default status
+
+                // Create a new row for the table
+                let row = document.createElement("tr");
+
+                // Add driver name
+                let nameCell = document.createElement("td");
+                nameCell.textContent = driverName;
+                row.appendChild(nameCell);
+
+                // Add distance
+                let distanceCell = document.createElement("td");
+                distanceCell.textContent = distance;
+                row.appendChild(distanceCell);
+
+                // Add status
+                let statusCell = document.createElement("td");
+                statusCell.textContent = status;
+                row.appendChild(statusCell);
+
+                // Append the row to the table
+                listContainer.appendChild(row);
+            });
+        }
+
+        function searchDriversInCircle(userLocation, drivers) {
+            let radiusIncrement = 500;  // Start with 500 meters
+            let maxRadius = 5000; // Max radius 5 km
+            let currentRadius = radiusIncrement;
+
+            let insideCircle = [];
+            let minDistance = Infinity;
+
+            // Iterate over circles with increasing radius
+            let interval = setInterval(() => {
+                // Create circle
+                circle = new google.maps.Circle({
+                    map: map,
+                    center: userLocation,
+                    radius: currentRadius,
+                    strokeColor: "#FF0000",
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    fillColor: "#FF0000",
+                    fillOpacity: 0.2,
+                });
+
+                // Check for drivers inside the current circle
+                drivers.forEach(driver => {
+                    let distance = google.maps.geometry.spherical.computeDistanceBetween(
+                        new google.maps.LatLng(userLocation),
+                        new google.maps.LatLng(driver.marker.getPosition())
+                    );
+
+                    if (distance <= currentRadius) {
+                        // Check if the driver is already in the insideCircle array
+                        const isDriverAlreadyAdded = insideCircle.some(
+                            (d) => d.driverNumber === driver.driverNumber
+                        );
+
+                        if (!isDriverAlreadyAdded) {
+                            insideCircle.push({ marker: driver.marker, distance, driverNumber: driver.driverNumber });
+                        }
+                    }
+                });
+
+                // If at least 5 drivers are found, stop increasing the radius
+                if (insideCircle.length >= 5) {
+                    clearInterval(interval);
+
+                    // Store the top 5 nearby drivers
+                    top5Drivers = insideCircle
+                        .sort((a, b) => a.distance - b.distance) // Sort by distance
+                        .slice(0, 5); // Take the top 5
+
+                    // Display the top 5 drivers
+                    displayTop5Drivers(top5Drivers);
+
+                    // Notify that the best rider is being allocated
+                    alert("Best rider is being allocated. Please wait...");
+
+                    // Allocate a random driver after 10 seconds
+                    setTimeout(() => {
+                        allocateDriver(top5Drivers);
+                    }, 10000); // 10 seconds delay
+                }
+
+                // Stop after max radius is reached
+                if (currentRadius >= maxRadius) {
+                    clearInterval(interval);
+                    if (insideCircle.length < 5) {
+                        document.getElementById("best-driver").textContent = "Not enough drivers found!";
+                    }
+                }
+
+                currentRadius += radiusIncrement; // Increase radius
+            }, 1000); // Run every 1 second for a smooth transition
+        }
+
+        function displayTop5Drivers(drivers) {
+            const listContainer = document.getElementById("drivers-list");
+            listContainer.innerHTML = "";
+
+            drivers.forEach((driver, index) => {
+                let driverName = `Driver ${driver.driverNumber}`;
+                let distance = (driver.distance / 1000).toFixed(2);
+                let status = "Available"; // Default status
+
+                // Create a new row for the table
+                let row = document.createElement("tr");
+
+                // Add driver name
+                let nameCell = document.createElement("td");
+                nameCell.textContent = driverName;
+                row.appendChild(nameCell);
+
+                // Add distance
+                let distanceCell = document.createElement("td");
+                distanceCell.textContent = distance;
+                row.appendChild(distanceCell);
+
+                // Add status
+                let statusCell = document.createElement("td");
+                statusCell.textContent = status;
+                row.appendChild(statusCell);
+
+                // Append the row to the table
+                listContainer.appendChild(row);
+            });
+        }
+
+        function allocateDriver(drivers) {
+            const randomDriver = drivers[Math.floor(Math.random() * drivers.length)];
+            nearestDriverNumber = randomDriver.driverNumber;
+            nearestDriverDistance = (randomDriver.distance / 1000).toFixed(2);
+
+            // Update the display for the allocated driver
+            document.getElementById("best-driver").textContent = `Allocated Driver: Driver ${nearestDriverNumber} | ${nearestDriverDistance} km away`;
+            randomDriver.marker.setIcon("http://maps.google.com/mapfiles/ms/icons/green-dot.png");
+
+            // Notify the user with details of all 5 drivers and the allocated driver
+            let driverDetails = "Top 5 Nearby Drivers:\n";
+            drivers.forEach(driver => {
+                driverDetails += `Driver ${driver.driverNumber} | ${(driver.distance / 1000).toFixed(2)} km away\n`;
+            });
+            driverDetails += `\nAllocated Driver: Driver ${nearestDriverNumber} | ${nearestDriverDistance} km away`;
+            alert(driverDetails);
+        }
+
+        // Handle "Cancel Ride" button click
+        document.getElementById('cancel-ride').addEventListener('click', function() {
+            // Redirect to index.html
+            window.location.href = 'index.html';
+        });
+
+        // Handle "Request New Driver" button click
+        document.getElementById('request-new-driver').addEventListener('click', function() {
+            if (top5Drivers.length > 1) {
+                // Remove the currently allocated driver from the top5Drivers array
+                top5Drivers = top5Drivers.filter(driver => driver.driverNumber !== nearestDriverNumber);
+
+                // Allocate the next best driver
+                allocateDriver(top5Drivers);
+            } else {
+                alert("No more drivers available. Please try again later.");
+            }
+        });
+
+        // Handle "Confirm Ride" button click
+        document.getElementById('confirm-ride').addEventListener('click', function() {
+            if (nearestDriverNumber) {
+                // Generate random source and destination from the area names
+                const areaNames = [
+                    "Amruthahalli", "Anjanapura", "Anekal", "Banashankari", "Banashankari 6th Stage",
+                    "Bannerghatta Road", "Basavanagudi", "Begur", "Bellandur", "Benniganahalli",
+                    "Bommanahalli", "Bommasandra Industrial Area", "Brigade Road", "Brookefield",
+                    "BTM Layout", "Byatarayanapura", "CV Raman Nagar", "Church Street", "Commercial Street",
+                    "Cunningham Road", "Dasarahalli", "Devanahalli", "Doddabommasandra", "Domlur",
+                    "Electronic City", "Fraser Town", "Gokula", "HAL Airport Area", "Hebbal", "Hoodi",
+                    "Hongasandra", "Hoskote", "HSR Layout", "Hulimavu", "Indiranagar", "ITPL (Whitefield)",
+                    "Jakkur", "Jalahalli Cross", "Jayanagar", "Jigani", "JP Nagar", "Kaggadasapura",
+                    "Kadugodi", "Kengeri", "Kengeri Satellite Town", "Kodigehalli", "Koramangala",
+                    "KR Puram", "Krishnaraja Puram", "Kumaraswamy Layout", "Kumbalgodu", "Kundalahalli",
+                    "Lavelle Road", "Mahadevpura", "Malleshpalya", "Malleshwaram", "Manyata Tech Park (Nagavara)",
+                    "Marathahalli", "Mathikere", "MG Road", "Nagarbhavi", "Nagasandra", "Nandini Layout",
+                    "Nayandahalli", "Nelamangala", "Old Airport Road", "Outer Ring Road (ORR)", "Peenya",
+                    "Peenya Industrial Area", "Rajajinagar", "Rajarajeshwari Arch", "Rajarajeshwari Nagar",
+                    "Rajiv Nagar", "Ramamurthy Nagar", "Residency Road", "Richmond Town", "RT Nagar",
+                    "Sadashivanagar", "Sahakara Nagar", "Sanjaynagar", "Sarjapur", "Shivajinagar",
+                    "Thanisandra", "Tumkur Road", "Udayagiri", "Ullal", "Ulsoor", "Uttarahalli", "Varthur",
+                    "Vidyaranyapura", "Vijayanagar", "Vishweshwaraiah Layout", "Whitefield", "Yelahanka",
+                    "Yelahanka New Town", "Yeshwanthpur"
+                ];
+
+                const source = areaNames[Math.floor(Math.random() * areaNames.length)];
+                const destination = areaNames[Math.floor(Math.random() * areaNames.length)];
+
+                // Generate random distance, base fare, average time, and total trip time
+                const distance = (Math.random() * 50).toFixed(2); // Random distance between 1 and 50 km
+                const baseFare = Math.floor(Math.random() * (200 - 50 + 1)) + 50; // Random base fare between 50 and 200 INR
+                const averageTime = Math.floor(Math.random() * (60 - 15 + 1)) + 15; // Random average time between 15 and 60 minutes
+                const totalTripTime = averageTime + (Math.random() * 20 - 10); // Random total trip time near average time
+
+                // Redirect to ride-confirmation.html with ride details as URL parameters
+                const queryParams = new URLSearchParams({
+                    userNumber: nearestDriverNumber,
+                    source: source,
+                    destination: destination,
+                    distance: distance,
+                    baseFare: baseFare,
+                    averageTime: averageTime,
+                    totalTripTime: totalTripTime.toFixed(2),
+                }).toString();
+
+                window.location.href = `ride-confirmation.html?${queryParams}`;
+            } else {
+                alert("No driver allocated. Please wait for a driver to be allocated.");
+            }
+        });
+
+        window.initMap = initMap;
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Traffic Updates in Bengaluru</title>
+  <link rel="stylesheet" href="styles/style.css"> <!-- Link to your existing CSS file -->
+  <style>
+    /* Reset margin and padding for body and html */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      overflow-x: hidden; /* Prevent horizontal scroll */
+    }
+
+    /* Header Styles */
+    header {
+      background: #FA4032; /* Dark red for header */
+      color: #fff;
+      padding: 1rem 0;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px; /* Space between logo and text */
+    }
+
+    .logo-img {
+      width: 40px; /* Adjust logo size */
+      height: 40px; /* Adjust logo size */
+    }
+
+    .logo span {
+      font-size: 1.8rem; /* Adjust text size */
+      font-weight: bold;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      margin: 0;
+      padding: 0;
+    }
+
+    .nav-links li {
+      margin-left: 20px;
+    }
+
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 1.2rem; /* Increase nav button font size */
+      padding: 5px 10px; /* Add padding for better click area */
+      transition: color 0.3s ease, background-color 0.3s ease; /* Smooth transition */
+    }
+
+    .nav-links a:hover {
+      color: #FA812F; /* Orange text on hover */
+      background-color: rgba(255, 255, 255, 0.1); /* Add a subtle background on hover */
+      border-radius: 5px; /* Rounded corners */
+    }
+
+    /* Main Content Styles */
+    .main-content {
+      padding-top: 80px; /* Account for fixed header */
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #FA4032; /* Dark red for headings */
+      text-align: center;
+    }
+
+    /* Map Styles */
+    #map {
+      height: 50vh;
+      width: 100%;
+      border: 4px solid #FA4032; /* Add a border to the map */
+      border-radius: 10px; /* Rounded corners */
+      margin-top: 20px;
+    }
+
+    /* Traffic Details Section */
+    #traffic-details {
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background-color: #FEF3E2; /* Light orange background */
+      border-top: 1px solid #ddd;
+      margin-top: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #traffic-details h2 {
+      margin-top: 0;
+      color: #FA4032; /* Dark red for headings */
+    }
+
+    .traffic-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .traffic-info div {
+      background-color: #fff;
+      padding: 10px;
+      border: 1px solid #FA4032; /* Dark red border */
+      border-radius: 5px;
+      width: 200px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .traffic-info div h3 {
+      margin: 0;
+      font-size: 16px;
+      color: #FA4032; /* Dark red for headings */
+    }
+
+    .traffic-info div p {
+      margin: 5px 0 0;
+      font-size: 14px;
+      color: #555;
+    }
+
+    /* Separate sections for nearby and other areas */
+    .section {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header Section -->
+  <header>
+    <nav>
+      <div class="logo">
+        <img src="assets/images/nammayatri_logo.jpg" alt="oNe-O-oNe Logo" class="logo-img">
+        <span>NammaYatri</span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="driver_interface.html">Ride Requests</a></li>
+        <li><a href="highdemand.html">Demand Prediction</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+    <h1>Live Traffic Updates in Bengaluru</h1>
+    <div id="map"></div>
+    <div id="traffic-details">
+      <div class="section">
+        <h2>Nearby Areas</h2>
+        <div class="traffic-info" id="nearby-traffic-info">
+          <!-- Nearby traffic details will be dynamically inserted here -->
+        </div>
+      </div>
+      <div class="section">
+        <h2>Other Areas</h2>
+        <div class="traffic-info" id="other-traffic-info">
+          <!-- Other traffic details will be dynamically inserted here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Google Maps JavaScript API -->
+  <script>
+    // Initialize and display the map
+    function initMap() {
+      // Bengaluru coordinates (fallback if user location is not available)
+      const bengaluru = { lat: 12.9716, lng: 77.5946 };
+
+      // Create a map centered at Bengaluru
+      const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 12,
+        center: bengaluru,
+      });
+
+      // Enable the traffic layer
+      const trafficLayer = new google.maps.TrafficLayer();
+      trafficLayer.setMap(map);
+
+      // Define coordinates for all areas of Bengaluru
+      const areas = [
+        { name: "Amruthahalli", coords: { lat: 13.0409, lng: 77.6128 } },
+        { name: "Anjanapura", coords: { lat: 12.8707, lng: 77.5639 } },
+        { name: "Anekal", coords: { lat: 12.7081, lng: 77.6953 } },
+        { name: "Banashankari", coords: { lat: 12.9408, lng: 77.5486 } },
+        { name: "Banashankari 6th Stage", coords: { lat: 12.8996, lng: 77.5467 } },
+        { name: "Bannerghatta Road", coords: { lat: 12.8876, lng: 77.597 } },
+        { name: "Basavanagudi", coords: { lat: 12.9434, lng: 77.5762 } },
+        { name: "Begur", coords: { lat: 12.8775, lng: 77.6322 } },
+        { name: "Bellandur", coords: { lat: 12.9254, lng: 77.6766 } },
+        { name: "Benniganahalli", coords: { lat: 12.9867, lng: 77.6594 } },
+        { name: "Bommanahalli", coords: { lat: 12.8992, lng: 77.6196 } },
+        { name: "Bommasandra Industrial Area", coords: { lat: 12.8075, lng: 77.6975 } },
+        { name: "Brigade Road", coords: { lat: 12.9747, lng: 77.6097 } },
+        { name: "Brookefield", coords: { lat: 12.9714, lng: 77.6597 } },
+        { name: "BTM Layout", coords: { lat: 12.9166, lng: 77.6101 } },
+        { name: "Byatarayanapura", coords: { lat: 13.0657, lng: 77.5921 } },
+        { name: "CV Raman Nagar", coords: { lat: 12.9855, lng: 77.6608 } },
+        { name: "Church Street", coords: { lat: 12.9733, lng: 77.6119 } },
+        { name: "Commercial Street", coords: { lat: 12.9758, lng: 77.6045 } },
+        { name: "Cunningham Road", coords: { lat: 12.9861, lng: 77.6008 } },
+        { name: "Dasarahalli", coords: { lat: 13.0489, lng: 77.5114 } },
+        { name: "Devanahalli", coords: { lat: 13.2472, lng: 77.7118 } },
+        { name: "Doddabommasandra", coords: { lat: 13.0409, lng: 77.6128 } },
+        { name: "Domlur", coords: { lat: 12.9602, lng: 77.6405 } },
+        { name: "Electronic City", coords: { lat: 12.8456, lng: 77.6603 } },
+        { name: "Fraser Town", coords: { lat: 12.9986, lng: 77.6181 } },
+        { name: "Gokula", coords: { lat: 13.0276, lng: 77.5619 } },
+        { name: "HAL Airport Area", coords: { lat: 12.9538, lng: 77.6686 } },
+        { name: "Hebbal", coords: { lat: 13.0355, lng: 77.597 } },
+        { name: "Hoodi", coords: { lat: 12.9992, lng: 77.7264 } },
+        { name: "Hongasandra", coords: { lat: 12.8975, lng: 77.6314 } },
+        { name: "Hoskote", coords: { lat: 13.0707, lng: 77.7981 } },
+        { name: "HSR Layout", coords: { lat: 12.9115, lng: 77.6382 } },
+        { name: "Hulimavu", coords: { lat: 12.8792, lng: 77.6014 } },
+        { name: "Indiranagar", coords: { lat: 12.9784, lng: 77.6408 } },
+        { name: "ITPL (Whitefield)", coords: { lat: 12.9698, lng: 77.7499 } },
+        { name: "Jakkur", coords: { lat: 13.0775, lng: 77.5975 } },
+        { name: "Jalahalli Cross", coords: { lat: 13.0489, lng: 77.5408 } },
+        { name: "Jayanagar", coords: { lat: 12.9308, lng: 77.5838 } },
+        { name: "Jigani", coords: { lat: 12.7814, lng: 77.6325 } },
+        { name: "JP Nagar", coords: { lat: 12.9075, lng: 77.5858 } },
+        { name: "Kaggadasapura", coords: { lat: 12.9714, lng: 77.6597 } },
+        { name: "Kadugodi", coords: { lat: 12.9936, lng: 77.7325 } },
+        { name: "Kengeri", coords: { lat: 12.9075, lng: 77.4814 } },
+        { name: "Kengeri Satellite Town", coords: { lat: 12.9075, lng: 77.4814 } },
+        { name: "Kodigehalli", coords: { lat: 13.0658, lng: 77.5725 } },
+        { name: "Koramangala", coords: { lat: 12.9279, lng: 77.6271 } },
+        { name: "KR Puram", coords: { lat: 13.0086, lng: 77.7041 } },
+        { name: "Krishnaraja Puram", coords: { lat: 12.9936, lng: 77.7325 } },
+        { name: "Kumaraswamy Layout", coords: { lat: 12.9075, lng: 77.5858 } },
+        { name: "Kumbalgodu", coords: { lat: 12.8708, lng: 77.4814 } },
+        { name: "Kundalahalli", coords: { lat: 12.9597, lng: 77.7264 } },
+        { name: "Lavelle Road", coords: { lat: 12.9714, lng: 77.6008 } },
+        { name: "Mahadevpura", coords: { lat: 12.9936, lng: 77.7325 } },
+        { name: "Malleshpalya", coords: { lat: 12.9714, lng: 77.6597 } },
+        { name: "Malleshwaram", coords: { lat: 13.0055, lng: 77.5665 } },
+        { name: "Manyata Tech Park (Nagavara)", coords: { lat: 13.0489, lng: 77.6197 } },
+        { name: "Marathahalli", coords: { lat: 12.9589, lng: 77.7014 } },
+        { name: "Mathikere", coords: { lat: 13.0289, lng: 77.5725 } },
+        { name: "MG Road", coords: { lat: 12.9758, lng: 77.6045 } },
+        { name: "Nagarbhavi", coords: { lat: 12.9714, lng: 77.5125 } },
+        { name: "Nagasandra", coords: { lat: 13.0489, lng: 77.6197 } },
+        { name: "Nandini Layout", coords: { lat: 13.0289, lng: 77.5725 } },
+        { name: "Nayandahalli", coords: { lat: 12.9489, lng: 77.5408 } },
+        { name: "Nelamangala", coords: { lat: 13.0975, lng: 77.3947 } },
+        { name: "Old Airport Road", coords: { lat: 12.9538, lng: 77.6686 } },
+        { name: "Outer Ring Road (ORR)", coords: { lat: 12.9714, lng: 77.6597 } },
+        { name: "Peenya", coords: { lat: 13.0289, lng: 77.5114 } },
+        { name: "Peenya Industrial Area", coords: { lat: 13.0289, lng: 77.5114 } },
+        { name: "Rajajinagar", coords: { lat: 12.9914, lng: 77.5514 } },
+        { name: "Rajarajeshwari Arch", coords: { lat: 12.9075, lng: 77.4814 } },
+        { name: "Rajarajeshwari Nagar", coords: { lat: 12.9075, lng: 77.4814 } },
+        { name: "Rajiv Nagar", coords: { lat: 12.9714, lng: 77.6597 } },
+        { name: "Ramamurthy Nagar", coords: { lat: 12.9855, lng: 77.6608 } },
+        { name: "Residency Road", coords: { lat: 12.9714, lng: 77.6008 } },
+        { name: "Richmond Town", coords: { lat: 12.9714, lng: 77.6008 } },
+        { name: "RT Nagar", coords: { lat: 13.0289, lng: 77.5725 } },
+        { name: "Sadashivanagar", coords: { lat: 13.0289, lng: 77.5725 } },
+        { name: "Sahakara Nagar", coords: { lat: 13.0489, lng: 77.6197 } },
+        { name: "Sanjaynagar", coords: { lat: 13.0289, lng: 77.5725 } },
+        { name: "Sarjapur", coords: { lat: 12.8992, lng: 77.6869 } },
+        { name: "Shivajinagar", coords: { lat: 12.9758, lng: 77.6045 } },
+        { name: "Thanisandra", coords: { lat: 13.0489, lng: 77.6197 } },
+        { name: "Tumkur Road", coords: { lat: 13.0289, lng: 77.5114 } },
+        { name: "Udayagiri", coords: { lat: 12.9714, lng: 77.6597 } },
+        { name: "Ullal", coords: { lat: 12.9075, lng: 77.4814 } },
+        { name: "Ulsoor", coords: { lat: 12.9758, lng: 77.6045 } },
+        { name: "Uttarahalli", coords: { lat: 12.9075, lng: 77.5408 } },
+        { name: "Varthur", coords: { lat: 12.9714, lng: 77.6597 } },
+        { name: "Vidyaranyapura", coords: { lat: 13.0657, lng: 77.5921 } },
+        { name: "Vijayanagar", coords: { lat: 12.9714, lng: 77.5125 } },
+        { name: "Vishweshwaraiah Layout", coords: { lat: 12.9714, lng: 77.6597 } },
+        { name: "Whitefield", coords: { lat: 12.9698, lng: 77.7499 } },
+        { name: "Yelahanka", coords: { lat: 13.1007, lng: 77.5963 } },
+        { name: "Yelahanka New Town", coords: { lat: 13.1007, lng: 77.5963 } },
+        { name: "Yeshwanthpur", coords: { lat: 13.0252, lng: 77.5393 } },
+      ];
+
+      // Variables to store user location, marker, and circle
+      let userMarker = null;
+      let userCircle = null;
+      let userLocation = null;
+
+      // Function to calculate distance between two coordinates (in km)
+      function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Radius of the Earth in km
+        const dLat = (lat2 - lat1) * (Math.PI / 180);
+        const dLon = (lon2 - lon1) * (Math.PI / 180);
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distance in km
+      }
+
+      // Function to get user's location
+      function getUserLocation() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              userLocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+              };
+
+              // Center the map on the user's location
+              map.setCenter(userLocation);
+
+              // Remove existing user marker and circle
+              if (userMarker) userMarker.setMap(null);
+              if (userCircle) userCircle.setMap(null);
+
+              // Add a blue marker for the user's location
+              userMarker = new google.maps.Marker({
+                position: userLocation,
+                map: map,
+                icon: {
+                  url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+                },
+                title: "Your Location",
+              });
+
+              // Add a 5 km radius circle around the user's location
+              userCircle = new google.maps.Circle({
+                strokeColor: "#FF0000",
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: "#FF0000",
+                fillOpacity: 0.2,
+                map: map,
+                center: userLocation,
+                radius: 5000, // 5 km in meters
+              });
+
+              // Find nearby areas (within 5 km)
+              const nearbyAreas = areas.filter(area => {
+                const distance = calculateDistance(
+                  userLocation.lat,
+                  userLocation.lng,
+                  area.coords.lat,
+                  area.coords.lng
+                );
+                return distance <= 5; // 5 km radius
+              });
+
+              // Other areas (outside 5 km)
+              const otherAreas = areas.filter(area => {
+                const distance = calculateDistance(
+                  userLocation.lat,
+                  userLocation.lng,
+                  area.coords.lat,
+                  area.coords.lng
+                );
+                return distance > 5; // Outside 5 km radius
+              });
+
+              // Simulate traffic updates for nearby and other areas
+              const nearbyTrafficUpdates = nearbyAreas.map(area => ({
+                name: area.name,
+                coords: area.coords,
+                traffic: getRandomTraffic(),
+              }));
+
+              const otherTrafficUpdates = otherAreas.map(area => ({
+                name: area.name,
+                coords: area.coords,
+                traffic: getRandomTraffic(),
+              }));
+
+              // Display traffic details
+              displayTrafficDetails(nearbyTrafficUpdates, "nearby-traffic-info");
+              displayTrafficDetails(otherTrafficUpdates, "other-traffic-info");
+
+              // Add markers for nearby areas with traffic colors
+              nearbyTrafficUpdates.forEach(area => {
+                const markerColor = getMarkerColor(area.traffic);
+                new google.maps.Marker({
+                  position: area.coords,
+                  map: map,
+                  icon: {
+                    url: `https://maps.google.com/mapfiles/ms/icons/${markerColor}-dot.png`,
+                  },
+                  title: `${area.name} - Traffic: ${area.traffic}`,
+                });
+              });
+            },
+            (error) => {
+              console.error("Error getting user location:", error);
+              alert("Unable to fetch your location. Using default location (Bengaluru).");
+            }
+          );
+        } else {
+          alert("Geolocation is not supported by this browser.");
+        }
+      }
+
+      // Function to simulate traffic data
+      function getRandomTraffic() {
+        const trafficLevels = ["Low", "Moderate", "High"];
+        return trafficLevels[Math.floor(Math.random() * trafficLevels.length)];
+      }
+
+      // Function to get marker color based on traffic
+      function getMarkerColor(traffic) {
+        switch (traffic) {
+          case "High":
+            return "red";
+          case "Moderate":
+            return "yellow";
+          case "Low":
+            return "green";
+          default:
+            return "gray";
+        }
+      }
+
+      // Function to display traffic details
+      function displayTrafficDetails(trafficUpdates, elementId) {
+        const trafficInfoDiv = document.getElementById(elementId);
+        trafficInfoDiv.innerHTML = ""; // Clear previous content
+
+        trafficUpdates.forEach(update => {
+          const trafficDiv = document.createElement("div");
+          trafficDiv.innerHTML = `
+            <h3>${update.name}</h3>
+            <p>Traffic: ${update.traffic}</p>
+          `;
+          trafficInfoDiv.appendChild(trafficDiv);
+        });
+      }
+
+      // Get user's location and display traffic updates
+      getUserLocation();
+
+      // Auto-recenter the map and reload markers every 10 seconds
+      setInterval(getUserLocation, 10000);
+    }
+
+    // Log errors if the map fails to load
+    function handleMapError() {
+      console.error("Google Maps failed to load. Check your API key and network connection.");
+    }
+  </script>
+
+  <!-- Load the Google Maps JavaScript API with your API key -->
+  <script
+    async
+    defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDsbifug6g9OqlmZE9z-fuNKTBGy4VOHFM&callback=initMap"
+    onerror="handleMapError()"
+  ></script>
+</body>
+</html>

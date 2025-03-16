@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Driver Login/Register</title>
+  <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+  <!-- Header Section -->
+  <header>
+    <nav>
+      <div class="logo">
+        <img src="assets/images/nammayatri_logo.jpg" alt="oNe-O-oNe Logo" class="logo-img">
+        <span>oNe-O-oNe</span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="home.html">Home</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Driver Login/Register Section -->
+  <section class="driver-section">
+    <h2>Driver Login/Register</h2>
+    <div class="form-container">
+      <!-- Login Form -->
+      <form id="driver-login-form">
+        <h3>Login</h3>
+        <div class="form-grid">
+          <input type="email" id="driver-email" placeholder="Email" required>
+          <input type="password" id="driver-password" placeholder="Password" required>
+        </div>
+        <button type="submit">Login</button>
+      </form>
+
+      <!-- Registration Form -->
+      <form id="driver-register-form">
+        <h3>Register</h3>
+        <div class="form-grid">
+          <input type="text" id="driver-name" placeholder="Full Name" required>
+          <input type="email" id="driver-email-register" placeholder="Email" required>
+          <input type="password" id="driver-password-register" placeholder="Password" required>
+          <input type="tel" id="driver-phone" placeholder="Phone Number" required>
+          <input type="text" id="driver-license" placeholder="Driver's License Number" required>
+          <input type="text" id="driver-vehicle" placeholder="Vehicle Type" required>
+          <input type="text" id="driver-vehicle-number" placeholder="Vehicle Number" required>
+        </div>
+        <button type="submit">Register</button>
+      </form>
+    </div>
+  </section>
+
+  <script src="scripts/script.js"></script>
+</body>
+</html>

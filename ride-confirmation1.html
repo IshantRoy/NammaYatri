@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ride Confirmation</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            background-color: #4CAF50; /* Green background */
+            color: white;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        .details {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            color: #333;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .details p {
+            font-size: 1.2rem;
+            margin: 10px 0;
+        }
+        .emoji {
+            font-size: 4rem;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #ffffff;
+            color: rgb(46, 213, 37);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="emoji">🚕</div>
+    <h1>Ride in Progress!</h1>
+    <div class="details">
+        <p><strong>User:</strong> <span id="user-number"></span></p>
+        <p><strong>Source:</strong> <span id="source"></span></p>
+        <p><strong>Destination:</strong> <span id="destination"></span></p>
+        <p><strong>Distance:</strong> <span id="distance"></span> km</p>
+        <p><strong>Base Fare:</strong> <span id="base-fare"></span></p>
+        <p><strong>Average Time:</strong> <span id="average-time"></span> minutes</p>
+        <p><strong>Total Trip Time:</strong> <span id="total-trip-time"></span> minutes</p>
+        <p><strong>Total Fare:</strong> <span id="total-fare"></span></p>
+    </div>
+    <button id="complete-fare">Complete Ride</button>
+
+    <script>
+        // Retrieve ride details from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const userNumber = urlParams.get('userNumber');
+        const source = urlParams.get('source');
+        const destination = urlParams.get('destination');
+        const distance = parseFloat(urlParams.get('distance')); // Distance in km
+        const baseFare = parseFloat(urlParams.get('baseFare')); // Base fare in INR
+        const averageTime = parseFloat(urlParams.get('averageTime')); // Average time in minutes
+        const totalTripTime = parseFloat(urlParams.get('totalTripTime')); // Total trip time in minutes
+
+        // Display ride details
+        document.getElementById('user-number').textContent = userNumber;
+        document.getElementById('source').textContent = source;
+        document.getElementById('destination').textContent = destination;
+        document.getElementById('distance').textContent = distance.toFixed(2);
+        document.getElementById('base-fare').textContent = `₹${baseFare.toFixed(2)}`;
+        document.getElementById('average-time').textContent = averageTime;
+        document.getElementById('total-trip-time').textContent = totalTripTime.toFixed(2);
+
+        // Function to calculate total fare
+        function calculateTotalFare(baseFare, averageTime, totalTripTime) {
+            if (totalTripTime > averageTime) {
+                const extraTime = totalTripTime - averageTime; // Extra time taken
+                const extraFare = extraTime * (0.05 * baseFare); // 5% of base fare per extra minute
+                return baseFare + extraFare; // Total fare
+            } else {
+                return baseFare; // No extra fare if total trip time is less than or equal to average time
+            }
+        }
+
+        // Handle "Complete Fare" button click
+        document.getElementById('complete-fare').addEventListener('click', function() {
+            const totalFare = calculateTotalFare(baseFare, averageTime, totalTripTime); // Calculate total fare
+            document.getElementById('total-fare').textContent = `₹${totalFare.toFixed(2)}`; // Display total fare
+            alert(`Total Fare calculated: ₹${totalFare.toFixed(2)}`); // Show total fare in alert
+            this.disabled = true; // Disable the button after fare is calculated
+        });
+    </script>
+</body>
+</html>
